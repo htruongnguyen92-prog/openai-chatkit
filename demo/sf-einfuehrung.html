@@ -1,0 +1,749 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Salesforce – Interaktive Einführung | NovumState</title>
+<style>
+  :root {
+    --sf-blue: #0070d2;
+    --sf-blue-dark: #005fb2;
+    --sf-navy: #16325c;
+    --sf-bg: #f3f2f2;
+    --sf-border: #dddbda;
+    --sf-text: #080707;
+    --sf-text-weak: #54698d;
+    --sf-green: #2e844a;
+    --sf-amber: #fe9339;
+    --sf-red: #ea001e;
+    --radius: 6px;
+    --shadow: 0 2px 8px rgba(0,0,0,.12);
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    background: var(--sf-bg);
+    color: var(--sf-text);
+    font-size: 14px;
+    line-height: 1.4;
+  }
+
+  /* ---------- Global header ---------- */
+  .global-header {
+    background: var(--sf-navy);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 8px 16px;
+  }
+  .app-launcher {
+    width: 28px; height: 28px;
+    display: grid; grid-template-columns: repeat(3, 6px);
+    grid-template-rows: repeat(3, 6px); gap: 3px;
+    cursor: pointer; opacity: .9;
+  }
+  .app-launcher span { background: #fff; border-radius: 1px; }
+  .app-name { font-weight: 700; font-size: 16px; }
+  .app-name small { font-weight: 400; opacity: .7; display:block; font-size: 11px; }
+  .global-search {
+    flex: 1; max-width: 520px;
+    background: #fff; border-radius: 18px;
+    display: flex; align-items: center; gap: 8px;
+    padding: 6px 14px; color: var(--sf-text-weak);
+  }
+  .global-search input { border: 0; outline: 0; flex: 1; font-size: 13px; }
+  .header-spacer { flex: 1; }
+  .header-icons { display: flex; align-items: center; gap: 16px; }
+  .avatar {
+    width: 30px; height: 30px; border-radius: 50%;
+    background: #1589ee; color: #fff; display: grid; place-items: center;
+    font-weight: 700; font-size: 12px;
+  }
+
+  /* ---------- App nav tabs ---------- */
+  .app-nav {
+    background: #fff; border-bottom: 1px solid var(--sf-border);
+    display: flex; align-items: center; padding: 0 16px; gap: 4px;
+    box-shadow: 0 1px 3px rgba(0,0,0,.05);
+  }
+  .app-nav .tab {
+    padding: 12px 16px; cursor: pointer; font-weight: 600;
+    color: var(--sf-text-weak); border-bottom: 3px solid transparent;
+    white-space: nowrap; user-select: none;
+  }
+  .app-nav .tab:hover { color: var(--sf-blue); background: #f3f9ff; }
+  .app-nav .tab.active { color: var(--sf-blue); border-bottom-color: var(--sf-blue); }
+
+  /* ---------- Layout ---------- */
+  .page { max-width: 1180px; margin: 16px auto; padding: 0 16px; }
+  .view { display: none; }
+  .view.active { display: block; }
+
+  .record-header {
+    background: #fff; border: 1px solid var(--sf-border); border-radius: var(--radius);
+    padding: 16px 20px; display: flex; align-items: center; gap: 16px; margin-bottom: 14px;
+    box-shadow: var(--shadow);
+  }
+  .record-icon {
+    width: 44px; height: 44px; border-radius: 8px; display: grid; place-items: center;
+    color: #fff; font-size: 20px; flex-shrink: 0;
+  }
+  .ic-account { background: #ff9a3c; }
+  .ic-contract { background: #4bc076; }
+  .ic-case { background: #f99120; }
+  .ic-invoice { background: #5867e8; }
+  .record-header .meta small { color: var(--sf-text-weak); text-transform: uppercase; font-size: 11px; letter-spacing: .04em; }
+  .record-header .meta h1 { margin: 2px 0 0; font-size: 20px; }
+  .record-header .pills { margin-left: auto; display: flex; gap: 24px; }
+  .pill small { color: var(--sf-text-weak); display:block; font-size: 11px; }
+  .pill b { font-size: 14px; }
+
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .grid-3 { grid-template-columns: 1fr 1fr 1fr; }
+  @media (max-width: 900px){ .grid, .grid-3 { grid-template-columns: 1fr; } }
+
+  .card {
+    background: #fff; border: 1px solid var(--sf-border); border-radius: var(--radius);
+    box-shadow: var(--shadow); margin-bottom: 14px; overflow: hidden;
+  }
+  .card-head {
+    padding: 12px 16px; border-bottom: 1px solid var(--sf-border);
+    display: flex; align-items: center; gap: 8px; font-weight: 700; color: var(--sf-navy);
+  }
+  .card-head .count { color: var(--sf-text-weak); font-weight: 400; }
+  .card-head .badge {
+    margin-left:auto; background:#eceb; font-size:11px; color:var(--sf-text-weak);
+  }
+  .card-body { padding: 12px 16px; }
+
+  /* lists */
+  .list-row {
+    display: flex; align-items: center; gap: 12px; padding: 10px 0;
+    border-bottom: 1px solid #f0efef;
+  }
+  .list-row:last-child { border-bottom: 0; }
+  .list-row .ri { width: 30px; height: 30px; border-radius: 6px; display:grid; place-items:center; color:#fff; flex-shrink:0; font-size:13px; }
+  .list-row .grow { flex: 1; }
+  .list-row a { color: var(--sf-blue); text-decoration: none; font-weight: 600; }
+  .list-row a:hover { text-decoration: underline; }
+  .list-row small { color: var(--sf-text-weak); }
+
+  .tag { display:inline-block; padding:2px 8px; border-radius:12px; font-size:11px; font-weight:700; }
+  .tag-green { background:#d4f5e0; color:#0a6b32; }
+  .tag-amber { background:#fde9cf; color:#a25500; }
+  .tag-blue  { background:#d8e9fb; color:#054a91; }
+  .tag-grey  { background:#eee; color:#555; }
+
+  /* status path */
+  .path { display:flex; border-radius:4px; overflow:hidden; border:1px solid var(--sf-border); }
+  .path .step {
+    flex:1; text-align:center; padding:10px 4px; font-size:12px; font-weight:600;
+    background:#f3f3f3; color:var(--sf-text-weak); position:relative; cursor:pointer;
+  }
+  .path .step.done { background:#c9e7d2; color:#0a6b32; }
+  .path .step.current { background:var(--sf-blue); color:#fff; }
+
+  /* chatter */
+  .composer textarea {
+    width:100%; border:1px solid var(--sf-border); border-radius:6px; padding:10px;
+    resize:vertical; font-family:inherit; font-size:13px; min-height:54px;
+  }
+  .composer .row { display:flex; justify-content:flex-end; gap:8px; margin-top:8px; }
+  .feed-item { display:flex; gap:10px; padding:12px 0; border-bottom:1px solid #f0efef; }
+  .feed-item:last-child { border-bottom:0; }
+  .feed-item .av { width:34px; height:34px; border-radius:50%; background:#1589ee; color:#fff; display:grid; place-items:center; font-weight:700; font-size:12px; flex-shrink:0; }
+  .feed-item .who { font-weight:700; }
+  .feed-item .when { color:var(--sf-text-weak); font-size:12px; }
+  .feed-item .mention { color:var(--sf-blue); font-weight:600; }
+
+  .task { display:flex; align-items:flex-start; gap:10px; padding:10px 0; border-bottom:1px solid #f0efef; }
+  .task:last-child{ border-bottom:0; }
+  .task input { margin-top:3px; transform: scale(1.2); }
+  .task.done .t-title { text-decoration: line-through; color: var(--sf-text-weak); }
+
+  /* buttons */
+  .btn {
+    border:1px solid var(--sf-border); background:#fff; color:var(--sf-blue);
+    padding:7px 14px; border-radius:4px; font-weight:600; cursor:pointer; font-size:13px;
+  }
+  .btn:hover { background:#f3f9ff; }
+  .btn-primary { background:var(--sf-blue); color:#fff; border-color:var(--sf-blue); }
+  .btn-primary:hover { background:var(--sf-blue-dark); }
+  .btn-success { background:var(--sf-green); color:#fff; border-color:var(--sf-green); }
+  .btn-danger  { background:#fff; color:var(--sf-red); border-color:#f5b7bd; }
+  .btn-danger:hover { background:#fff5f5; }
+
+  /* invoice */
+  .inv-line { display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px dashed #eee; }
+  .inv-total { display:flex; justify-content:space-between; padding:10px 0 0; font-weight:700; font-size:16px; }
+  .approval-box { background:#fff8ee; border:1px solid #fde0bd; border-radius:6px; padding:14px; }
+
+  /* toast */
+  .toast-wrap { position:fixed; top:16px; left:50%; transform:translateX(-50%); z-index:2000; display:flex; flex-direction:column; gap:8px; }
+  .toast {
+    background:var(--sf-green); color:#fff; padding:12px 18px; border-radius:6px;
+    box-shadow:var(--shadow); font-weight:600; animation:slidein .25s ease;
+  }
+  @keyframes slidein { from{opacity:0; transform:translateY(-10px);} to{opacity:1;} }
+
+  /* ---------- Guided tour ---------- */
+  .tour-launch {
+    position:fixed; right:20px; bottom:20px; z-index:1500;
+    background:var(--sf-blue); color:#fff; border:0; border-radius:30px;
+    padding:14px 22px; font-weight:700; font-size:14px; cursor:pointer; box-shadow:var(--shadow);
+  }
+  .tour-launch:hover { background:var(--sf-blue-dark); }
+  #tourOverlay { position:fixed; inset:0; z-index:1600; display:none; }
+  #tourOverlay.active { display:block; }
+  .tour-backdrop {
+    position:absolute; inset:0; background:rgba(8,7,7,.55);
+    transition: clip-path .25s ease;
+  }
+  .spotlight-ring {
+    position:absolute; border:3px solid var(--sf-blue); border-radius:8px;
+    box-shadow:0 0 0 4px rgba(0,112,210,.25); transition: all .25s ease; pointer-events:none;
+  }
+  .tour-card {
+    position:absolute; width:340px; max-width:90vw; background:#fff; border-radius:10px;
+    box-shadow:0 8px 30px rgba(0,0,0,.3); padding:18px 20px; transition: all .25s ease;
+  }
+  .tour-card .chapter { color:var(--sf-blue); font-weight:700; font-size:12px; letter-spacing:.05em; text-transform:uppercase; }
+  .tour-card h3 { margin:6px 0 8px; font-size:17px; }
+  .tour-card p { margin:0 0 14px; color:#3e3e3c; }
+  .tour-card .nav { display:flex; align-items:center; gap:8px; }
+  .tour-card .dots { display:flex; gap:5px; margin-right:auto; }
+  .tour-card .dot { width:8px; height:8px; border-radius:50%; background:#dcdcdc; }
+  .tour-card .dot.active { background:var(--sf-blue); }
+  .tour-skip { position:absolute; top:14px; right:16px; z-index:1700; background:rgba(255,255,255,.9); border:0; border-radius:20px; padding:8px 16px; font-weight:600; cursor:pointer; }
+
+  /* welcome modal */
+  #welcome { position:fixed; inset:0; background:rgba(8,7,7,.6); z-index:1800; display:grid; place-items:center; }
+  #welcome.hidden { display:none; }
+  .welcome-card { background:#fff; border-radius:14px; width:560px; max-width:92vw; padding:32px; box-shadow:0 10px 40px rgba(0,0,0,.4); text-align:center; }
+  .welcome-card .logo { width:64px; height:64px; border-radius:14px; background:var(--sf-blue); display:grid; place-items:center; margin:0 auto 14px; }
+  .welcome-card h2 { margin:0 0 6px; font-size:24px; }
+  .welcome-card .sub { color:var(--sf-text-weak); margin-bottom:20px; }
+  .topic-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; text-align:left; margin-bottom:22px; }
+  .topic { display:flex; gap:10px; align-items:flex-start; padding:12px; border:1px solid var(--sf-border); border-radius:8px; }
+  .topic .n { width:26px; height:26px; border-radius:50%; background:var(--sf-blue); color:#fff; display:grid; place-items:center; font-weight:700; font-size:13px; flex-shrink:0; }
+  .topic b { display:block; font-size:13px; }
+  .topic small { color:var(--sf-text-weak); }
+  @media (max-width:560px){ .topic-grid{ grid-template-columns:1fr; } }
+</style>
+</head>
+<body>
+
+<!-- ============ GLOBAL HEADER ============ -->
+<header class="global-header">
+  <div class="app-launcher" title="App Launcher">
+    <span></span><span></span><span></span>
+    <span></span><span></span><span></span>
+    <span></span><span></span><span></span>
+  </div>
+  <div class="app-name">Vertragsmanagement<small>NovumState · Salesforce</small></div>
+  <div class="global-search" id="globalSearch">
+    🔍 <input placeholder="Suche nach Verträgen, Kontakten, Dokumenten …" />
+  </div>
+  <div class="header-spacer"></div>
+  <div class="header-icons">
+    <span title="Benachrichtigungen">🔔</span>
+    <span title="Aufgaben">✓</span>
+    <div class="avatar">TN</div>
+  </div>
+</header>
+
+<!-- ============ APP NAV ============ -->
+<nav class="app-nav" id="appNav">
+  <div class="tab active" data-tab="kunde">🏢 Kunde</div>
+  <div class="tab" data-tab="vorgang">🗂️ Vorgänge</div>
+  <div class="tab" data-tab="chatter">💬 Zusammenarbeit</div>
+  <div class="tab" data-tab="rechnung">🧾 Rechnungsfreigabe</div>
+</nav>
+
+<main class="page">
+
+  <!-- ===== TAB 1: KUNDE / ZENTRALE ABLAGE ===== -->
+  <section class="view active" data-view="kunde">
+    <div class="record-header" id="rh-kunde">
+      <div class="record-icon ic-account">🏢</div>
+      <div class="meta">
+        <small>Kunde</small>
+        <h1>Mustermann Immobilien GmbH</h1>
+      </div>
+      <div class="pills">
+        <div class="pill"><small>Branche</small><b>Immobilien</b></div>
+        <div class="pill"><small>Inhaber</small><b>Truong N.</b></div>
+        <div class="pill"><small>Status</small><b>Aktiv</b></div>
+      </div>
+    </div>
+
+    <div class="grid">
+      <div>
+        <div class="card" id="card-vertraege">
+          <div class="card-head">📄 Verträge <span class="count">(3)</span></div>
+          <div class="card-body">
+            <div class="list-row">
+              <div class="ri ic-contract">📄</div>
+              <div class="grow"><a href="#">Mietvertrag Objekt Lindenstr. 12</a><br><small>Laufzeit bis 31.12.2027</small></div>
+              <span class="tag tag-green">Aktiv</span>
+            </div>
+            <div class="list-row">
+              <div class="ri ic-contract">📄</div>
+              <div class="grow"><a href="#">Verwaltervertrag WEG Parkallee</a><br><small>Laufzeit bis 30.06.2026</small></div>
+              <span class="tag tag-green">Aktiv</span>
+            </div>
+            <div class="list-row">
+              <div class="ri ic-contract">📄</div>
+              <div class="grow"><a href="#">Dienstleistungsvertrag Hausmeister</a><br><small>In Verhandlung</small></div>
+              <span class="tag tag-amber">Entwurf</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="card" id="card-kontakte">
+          <div class="card-head">👤 Kontakte <span class="count">(2)</span></div>
+          <div class="card-body">
+            <div class="list-row">
+              <div class="ri" style="background:#1589ee">SM</div>
+              <div class="grow"><a href="#">Stefan Müller</a><br><small>Geschäftsführer · s.mueller@mustermann.de</small></div>
+            </div>
+            <div class="list-row">
+              <div class="ri" style="background:#9050e9">AK</div>
+              <div class="grow"><a href="#">Anna Krause</a><br><small>Buchhaltung · a.krause@mustermann.de</small></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="card" id="card-dateien">
+          <div class="card-head">📎 Dateien <span class="count">(5)</span></div>
+          <div class="card-body">
+            <div class="list-row"><div class="ri" style="background:#e8516a">PDF</div><div class="grow"><a href="#">Mietvertrag_Lindenstr12.pdf</a><br><small>2,1 MB · hochgeladen 12.06.2026</small></div></div>
+            <div class="list-row"><div class="ri" style="background:#e8516a">PDF</div><div class="grow"><a href="#">Grundbuchauszug.pdf</a><br><small>0,8 MB · 10.06.2026</small></div></div>
+            <div class="list-row"><div class="ri" style="background:#2a9d4a">XLS</div><div class="grow"><a href="#">Nebenkostenabrechnung_2025.xlsx</a><br><small>320 KB · 05.06.2026</small></div></div>
+            <div class="list-row"><div class="ri" style="background:#3577d4">DOC</div><div class="grow"><a href="#">Übergabeprotokoll.docx</a><br><small>180 KB · 02.06.2026</small></div></div>
+            <div class="list-row"><div class="ri" style="background:#e8516a">PDF</div><div class="grow"><a href="#">Versicherungspolice.pdf</a><br><small>1,4 MB · 28.05.2026</small></div></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-head">ℹ️ Details</div>
+          <div class="card-body">
+            <div class="inv-line"><span>Kundennummer</span><b>KD-10428</b></div>
+            <div class="inv-line"><span>Telefon</span><b>+49 30 1234567</b></div>
+            <div class="inv-line"><span>Adresse</span><b>Parkallee 7, 10115 Berlin</b></div>
+            <div class="inv-line" style="border:0"><span>Letzte Aktivität</span><b>heute</b></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== TAB 2: VORGÄNGE ===== -->
+  <section class="view" data-view="vorgang">
+    <div class="record-header">
+      <div class="record-icon ic-case">🗂️</div>
+      <div class="meta"><small>Vorgang</small><h1>Schadensmeldung – Wasserschaden Lindenstr. 12</h1></div>
+      <div class="pills">
+        <div class="pill"><small>Priorität</small><b>Hoch</b></div>
+        <div class="pill"><small>Zuständig</small><b>Anna Krause</b></div>
+      </div>
+    </div>
+
+    <div class="card" id="card-path">
+      <div class="card-body">
+        <div class="path" id="statusPath">
+          <div class="step done">Neu</div>
+          <div class="step done">In Bearbeitung</div>
+          <div class="step current">Warten auf Kunde</div>
+          <div class="step">Abgeschlossen</div>
+        </div>
+        <div class="row" style="display:flex; justify-content:flex-end; margin-top:12px;">
+          <button class="btn btn-primary" id="advanceCase">Als „Abgeschlossen" markieren</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid">
+      <div class="card">
+        <div class="card-head">📝 Vorgangsdetails</div>
+        <div class="card-body">
+          <div class="inv-line"><span>Vorgangsnummer</span><b>00012345</b></div>
+          <div class="inv-line"><span>Betreff</span><b>Wasserschaden Bad, 2. OG</b></div>
+          <div class="inv-line"><span>Gemeldet von</span><b>Stefan Müller</b></div>
+          <div class="inv-line"><span>Eröffnet am</span><b>13.06.2026</b></div>
+          <div class="inv-line" style="border:0"><span>Verknüpfter Vertrag</span><b>Mietvertrag Lindenstr. 12</b></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-head">🕓 Aktivitäten-Timeline</div>
+        <div class="card-body">
+          <div class="feed-item"><div class="av" style="background:#f99120">AK</div><div><span class="who">Anna Krause</span> hat Handwerker beauftragt <div class="when">heute, 09:14</div></div></div>
+          <div class="feed-item"><div class="av" style="background:#1589ee">TN</div><div><span class="who">Truong N.</span> hat Foto-Anhänge ergänzt <div class="when">gestern, 16:40</div></div></div>
+          <div class="feed-item"><div class="av" style="background:#9050e9">SM</div><div><span class="who">Stefan Müller</span> hat Vorgang gemeldet (per E-Mail) <div class="when">13.06., 08:02</div></div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== TAB 3: ZUSAMMENARBEIT (CHATTER + TASKS) ===== -->
+  <section class="view" data-view="chatter">
+    <div class="record-header">
+      <div class="record-icon" style="background:#1589ee">💬</div>
+      <div class="meta"><small>Zusammenarbeit</small><h1>Interne Kommunikation & Aufgaben</h1></div>
+    </div>
+    <div class="grid">
+      <div class="card" id="card-chatter">
+        <div class="card-head">💬 Chatter-Feed</div>
+        <div class="card-body">
+          <div class="composer">
+            <textarea id="postInput" placeholder="Teile ein Update … nutze @ um Kolleg:innen zu erwähnen"></textarea>
+            <div class="row">
+              <button class="btn" id="mentionBtn">@ Erwähnen</button>
+              <button class="btn btn-primary" id="postBtn">Posten</button>
+            </div>
+          </div>
+          <div id="feed" style="margin-top:6px;">
+            <div class="feed-item">
+              <div class="av" style="background:#f99120">AK</div>
+              <div><span class="who">Anna Krause</span> <span class="when">· vor 20 Min.</span><br>
+              <span class="mention">@Truong</span> Handwerker kommt morgen um 10 Uhr. Kannst du den Schlüssel bereitlegen?</div>
+            </div>
+            <div class="feed-item">
+              <div class="av" style="background:#9050e9">SM</div>
+              <div><span class="who">Stefan Müller</span> <span class="when">· vor 1 Std.</span><br>
+              Danke für die schnelle Rückmeldung zum Wasserschaden! 👍</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" id="card-tasks">
+        <div class="card-head">✓ Aufgaben <span class="count">(3)</span></div>
+        <div class="card-body" id="taskList">
+          <div class="task">
+            <input type="checkbox" />
+            <div class="grow"><div class="t-title"><b>Schlüssel für Handwerker bereitlegen</b></div><small>Fällig: morgen · zugewiesen an: Truong N.</small></div>
+            <span class="tag tag-amber">Offen</span>
+          </div>
+          <div class="task">
+            <input type="checkbox" />
+            <div class="grow"><div class="t-title"><b>Kostenvoranschlag an WEG-Verwaltung senden</b></div><small>Fällig: 18.06. · zugewiesen an: Anna Krause</small></div>
+            <span class="tag tag-amber">Offen</span>
+          </div>
+          <div class="task done">
+            <input type="checkbox" checked />
+            <div class="grow"><div class="t-title"><b>Schaden in Versicherung melden</b></div><small>Erledigt heute · Anna Krause</small></div>
+            <span class="tag tag-green">Erledigt</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== TAB 4: RECHNUNGSFREIGABE ===== -->
+  <section class="view" data-view="rechnung">
+    <div class="record-header">
+      <div class="record-icon ic-invoice">🧾</div>
+      <div class="meta"><small>Rechnung</small><h1>RE-2026-0457 · Klempnerei Wagner GmbH</h1></div>
+      <div class="pills">
+        <div class="pill"><small>Status</small><b id="invStatusPill">Wartet auf Freigabe</b></div>
+      </div>
+    </div>
+    <div class="grid">
+      <div class="card">
+        <div class="card-head">🧾 Rechnungspositionen</div>
+        <div class="card-body">
+          <div class="inv-line"><span>Notdienst Wasserschaden (Anfahrt + Ortung)</span><b>320,00 €</b></div>
+          <div class="inv-line"><span>Austausch Eckventil & Dichtungen</span><b>185,50 €</b></div>
+          <div class="inv-line"><span>Trocknungsgerät (3 Tage Miete)</span><b>210,00 €</b></div>
+          <div class="inv-line"><span>zzgl. 19% MwSt.</span><b>136,05 €</b></div>
+          <div class="inv-total"><span>Gesamtbetrag</span><span>851,55 €</span></div>
+        </div>
+      </div>
+      <div class="card" id="card-approval">
+        <div class="card-head">✅ Freigabe</div>
+        <div class="card-body">
+          <div class="approval-box" id="approvalBox">
+            <div class="inv-line"><span>Verknüpfter Vorgang</span><b>Wasserschaden Lindenstr. 12</b></div>
+            <div class="inv-line"><span>Freigabe durch</span><b>Truong N.</b></div>
+            <div class="inv-line" style="border:0"><span>Frist</span><b>17.06.2026</b></div>
+            <p style="color:var(--sf-text-weak)">Diese Rechnung benötigt deine Freigabe, bevor sie zur Zahlung an die Buchhaltung geht.</p>
+            <div style="display:flex; gap:10px;">
+              <button class="btn btn-success" id="approveBtn">✓ Genehmigen</button>
+              <button class="btn btn-danger" id="rejectBtn">✕ Ablehnen</button>
+            </div>
+          </div>
+          <div class="feed-item" style="margin-top:12px;">
+            <div class="av" style="background:#1589ee">TN</div>
+            <div><span class="who">Genehmigungsverlauf</span><div class="when" id="approvalLog">Angefordert von Anna Krause · heute 09:20</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<!-- ============ TOAST ============ -->
+<div class="toast-wrap" id="toastWrap"></div>
+
+<!-- ============ TOUR LAUNCH ============ -->
+<button class="tour-launch" id="tourLaunch">▶ Geführte Tour starten</button>
+
+<!-- ============ TOUR OVERLAY ============ -->
+<div id="tourOverlay">
+  <div class="tour-backdrop" id="tourBackdrop"></div>
+  <div class="spotlight-ring" id="spotlightRing"></div>
+  <button class="tour-skip" id="tourSkip">Tour beenden ✕</button>
+  <div class="tour-card" id="tourCard">
+    <div class="chapter" id="tourChapter"></div>
+    <h3 id="tourTitle"></h3>
+    <p id="tourText"></p>
+    <div class="nav">
+      <div class="dots" id="tourDots"></div>
+      <button class="btn" id="tourBack">Zurück</button>
+      <button class="btn btn-primary" id="tourNext">Weiter</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ WELCOME MODAL ============ -->
+<div id="welcome">
+  <div class="welcome-card">
+    <div class="logo">☁️</div>
+    <h2>Willkommen bei Salesforce</h2>
+    <div class="sub">In dieser interaktiven Demo zeigen wir an einem echten Fall, wie Salesforce euren Arbeitsalltag erleichtert.</div>
+    <div class="topic-grid">
+      <div class="topic"><div class="n">1</div><div><b>Zentrale Ablage</b><small>Verträge, Dokumente & Kontakte an einem Ort</small></div></div>
+      <div class="topic"><div class="n">2</div><div><b>Vorgänge</b><small>Dokumentieren, bearbeiten, organisieren</small></div></div>
+      <div class="topic"><div class="n">3</div><div><b>Zusammenarbeit</b><small>Posts & Aufgaben statt Mail-Pingpong</small></div></div>
+      <div class="topic"><div class="n">4</div><div><b>Rechnungsfreigabe</b><small>Freigeben direkt in Salesforce</small></div></div>
+    </div>
+    <button class="btn btn-primary" id="startTourBtn" style="padding:12px 28px; font-size:15px;">▶ Tour starten</button>
+    <button class="btn" id="exploreBtn" style="padding:12px 28px; font-size:15px;">Selbst erkunden</button>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ---------- Tab switching ---------- */
+  var tabs = document.querySelectorAll('#appNav .tab');
+  var views = document.querySelectorAll('.view');
+  function showTab(name){
+    tabs.forEach(function(t){ t.classList.toggle('active', t.dataset.tab === name); });
+    views.forEach(function(v){ v.classList.toggle('active', v.dataset.view === name); });
+  }
+  tabs.forEach(function(t){ t.addEventListener('click', function(){ showTab(t.dataset.tab); }); });
+
+  /* ---------- Toast ---------- */
+  function toast(msg, color){
+    var el = document.createElement('div');
+    el.className = 'toast';
+    if(color) el.style.background = color;
+    el.textContent = msg;
+    document.getElementById('toastWrap').appendChild(el);
+    setTimeout(function(){ el.style.transition='opacity .4s'; el.style.opacity='0'; }, 2600);
+    setTimeout(function(){ el.remove(); }, 3100);
+  }
+
+  /* ---------- Case status path ---------- */
+  document.getElementById('advanceCase').addEventListener('click', function(){
+    var steps = document.querySelectorAll('#statusPath .step');
+    steps.forEach(function(s){ s.classList.remove('current'); s.classList.add('done'); });
+    this.disabled = true; this.textContent = '✓ Vorgang abgeschlossen';
+    toast('Vorgang als „Abgeschlossen" markiert');
+  });
+
+  /* ---------- Chatter posting ---------- */
+  document.getElementById('mentionBtn').addEventListener('click', function(){
+    var ta = document.getElementById('postInput');
+    ta.value = (ta.value + ' @Anna ').replace(/^\s+/,'');
+    ta.focus();
+  });
+  document.getElementById('postBtn').addEventListener('click', function(){
+    var ta = document.getElementById('postInput');
+    var txt = ta.value.trim();
+    if(!txt){ toast('Bitte zuerst etwas schreiben', '#fe9339'); return; }
+    var html = txt.replace(/@(\wäöüÄÖÜ+)?(\w+)/g, function(m){ return '<span class="mention">'+m+'</span>'; });
+    var item = document.createElement('div');
+    item.className = 'feed-item';
+    item.innerHTML = '<div class="av">TN</div><div><span class="who">Truong N.</span> <span class="when">· gerade eben</span><br>'+html+'</div>';
+    var feed = document.getElementById('feed');
+    feed.insertBefore(item, feed.firstChild);
+    ta.value = '';
+    toast('Beitrag gepostet – erwähnte Kolleg:innen werden benachrichtigt 🔔');
+  });
+
+  /* ---------- Tasks ---------- */
+  document.getElementById('taskList').addEventListener('change', function(e){
+    if(e.target.type !== 'checkbox') return;
+    var task = e.target.closest('.task');
+    var tag = task.querySelector('.tag');
+    if(e.target.checked){
+      task.classList.add('done');
+      tag.className = 'tag tag-green'; tag.textContent = 'Erledigt';
+      toast('Aufgabe erledigt ✓');
+    } else {
+      task.classList.remove('done');
+      tag.className = 'tag tag-amber'; tag.textContent = 'Offen';
+    }
+  });
+
+  /* ---------- Invoice approval ---------- */
+  document.getElementById('approveBtn').addEventListener('click', function(){
+    finishApproval('Genehmigt', '#2e844a', 'Rechnung freigegeben – geht an die Buchhaltung 💸');
+  });
+  document.getElementById('rejectBtn').addEventListener('click', function(){
+    finishApproval('Abgelehnt', '#ea001e', 'Rechnung abgelehnt – Anfrage geht zurück');
+  });
+  function finishApproval(status, color, msg){
+    document.getElementById('invStatusPill').textContent = status;
+    document.getElementById('approvalLog').textContent =
+      status + ' von Truong N. · gerade eben';
+    var box = document.getElementById('approvalBox');
+    box.style.background = status==='Genehmigt' ? '#eafaf0' : '#fdf0f1';
+    box.style.borderColor = status==='Genehmigt' ? '#bce8cc' : '#f5b7bd';
+    box.querySelector('div[style*="flex"]').innerHTML =
+      '<b style="color:'+color+'">'+ (status==='Genehmigt'?'✓ ':'✕ ') + status +'</b>';
+    toast(msg, color);
+  }
+
+  /* ============ GUIDED TOUR ============ */
+  var steps = [
+    { tab:'kunde',   target:'#rh-kunde',     ch:'Einführung',
+      title:'Alles zu einem Kunden auf einen Blick',
+      text:'Das ist die Kundenakte. Statt in E-Mails, Ordnern und Excel-Listen zu suchen, findest du hier alles gebündelt zu „Mustermann Immobilien GmbH".' },
+    { tab:'kunde',   target:'#card-vertraege', ch:'Thema 1 · Zentrale Ablage',
+      title:'Verträge zentral & digital',
+      text:'Alle Verträge des Kunden – mit Status und Laufzeit. Kein Suchen mehr: ein Klick, und du siehst sofort, was aktiv ist und was ausläuft.' },
+    { tab:'kunde',   target:'#card-dateien',  ch:'Thema 1 · Zentrale Ablage',
+      title:'Dokumente & Kontakte am selben Ort',
+      text:'Dokumente (PDFs, Tabellen, Protokolle) und Ansprechpartner hängen direkt am Kunden. Egal wer im Team draufschaut – alle sehen denselben aktuellen Stand.' },
+    { tab:'vorgang', target:'#card-path',     ch:'Thema 2 · Vorgänge',
+      title:'Vorgänge dokumentieren & organisieren',
+      text:'Jeder Fall (hier: ein Wasserschaden) hat einen klaren Status-Pfad. Jeder sieht auf einen Blick, wie weit der Vorgang ist – auch wenn ein:e Kolleg:in im Urlaub ist.' },
+    { tab:'vorgang', target:'#card-path',     ch:'Thema 2 · Vorgänge', action:'advanceCase',
+      title:'Status mit einem Klick weiterschalten',
+      text:'Probiere es: Mit dem Button schaltest du den Vorgang auf „Abgeschlossen". Die Änderung ist für das ganze Team sofort sichtbar und dokumentiert.' },
+    { tab:'chatter', target:'#card-chatter',  ch:'Thema 3 · Zusammenarbeit',
+      title:'Kommunikation direkt am Vorgang',
+      text:'Statt verstreuter E-Mails: Posts mit @Erwähnung direkt im System. Die erwähnte Person wird benachrichtigt – und die Info bleibt für immer beim richtigen Fall.' },
+    { tab:'chatter', target:'#card-tasks',    ch:'Thema 3 · Zusammenarbeit',
+      title:'Aufgaben statt „kümmerst du dich mal?"',
+      text:'Aufgaben werden zugewiesen, terminiert und abgehakt. Nichts geht mehr unter – jede:r weiß, was zu tun ist und bis wann.' },
+    { tab:'rechnung',target:'#card-approval', ch:'Thema 4 · Rechnungsfreigabe', action:'approve',
+      title:'Rechnungen direkt in Salesforce freigeben',
+      text:'Die Rechnung zum Schaden landet hier zur Freigabe. Mit „Genehmigen" geht sie automatisch an die Buchhaltung – nachvollziehbar protokolliert. Probiere es aus!' },
+    { tab:'kunde',   target:null,             ch:'Geschafft 🎉',
+      title:'Das war’s – alles an einem Ort',
+      text:'Verträge, Dokumente, Vorgänge, Kommunikation und Freigaben: kein Suchen, keine Insellösungen. Jetzt bist du dran – logge dich in deinen eigenen Account ein und probiere es selbst!' }
+  ];
+
+  var current = 0;
+  var overlay   = document.getElementById('tourOverlay');
+  var ring      = document.getElementById('spotlightRing');
+  var card      = document.getElementById('tourCard');
+  var backdrop  = document.getElementById('tourBackdrop');
+
+  function buildDots(){
+    var d = document.getElementById('tourDots'); d.innerHTML='';
+    steps.forEach(function(_,i){
+      var s = document.createElement('div'); s.className='dot'+(i===current?' active':''); d.appendChild(s);
+    });
+  }
+
+  function positionFor(el){
+    if(!el){
+      ring.style.opacity = '0';
+      backdrop.style.clipPath = 'none';
+      card.style.top = '50%'; card.style.left = '50%';
+      card.style.transform = 'translate(-50%,-50%)';
+      return;
+    }
+    ring.style.opacity = '1';
+    var r = el.getBoundingClientRect();
+    var pad = 6;
+    ring.style.top = (r.top - pad)+'px';
+    ring.style.left = (r.left - pad)+'px';
+    ring.style.width = (r.width + pad*2)+'px';
+    ring.style.height = (r.height + pad*2)+'px';
+    // cut a hole in the backdrop
+    var t=r.top-pad, l=r.left-pad, b=r.bottom+pad, rt=r.right+pad;
+    backdrop.style.clipPath =
+      'polygon(0 0, 100% 0, 100% 100%, 0 100%, 0 '+t+'px, '+l+'px '+t+'px, '+l+'px '+b+'px, '+rt+'px '+b+'px, '+rt+'px '+t+'px, 0 '+t+'px)';
+    // place card: below if room, else above
+    card.style.transform = 'none';
+    var cardW = 340, cardH = 220;
+    var top = r.bottom + 16;
+    if(top + cardH > window.innerHeight) top = Math.max(16, r.top - cardH - 16);
+    var left = r.left;
+    if(left + cardW > window.innerWidth) left = window.innerWidth - cardW - 16;
+    card.style.top = top+'px';
+    card.style.left = left+'px';
+  }
+
+  function render(){
+    var step = steps[current];
+    showTab(step.tab);
+    document.getElementById('tourChapter').textContent = step.ch;
+    document.getElementById('tourTitle').textContent = step.title;
+    document.getElementById('tourText').textContent = step.text;
+    document.getElementById('tourBack').style.visibility = current===0 ? 'hidden':'visible';
+    document.getElementById('tourNext').textContent = current===steps.length-1 ? 'Fertig' : 'Weiter';
+    buildDots();
+    // wait for tab switch to render, then position
+    setTimeout(function(){
+      positionFor(step.target ? document.querySelector(step.target) : null);
+    }, 60);
+  }
+
+  function startTour(){
+    current = 0;
+    overlay.classList.add('active');
+    document.getElementById('welcome').classList.add('hidden');
+    // reset interactive demo state
+    render();
+  }
+  function endTour(){ overlay.classList.remove('active'); }
+
+  document.getElementById('tourNext').addEventListener('click', function(){
+    var step = steps[current];
+    // perform the optional demo action so users see the result
+    if(step.action==='advanceCase'){ var b=document.getElementById('advanceCase'); if(!b.disabled) b.click(); }
+    if(step.action==='approve'){ var pill=document.getElementById('invStatusPill'); if(pill.textContent.indexOf('Wartet')>-1) document.getElementById('approveBtn').click(); }
+    if(current < steps.length-1){ current++; render(); }
+    else endTour();
+  });
+  document.getElementById('tourBack').addEventListener('click', function(){
+    if(current>0){ current--; render(); }
+  });
+  document.getElementById('tourSkip').addEventListener('click', endTour);
+  document.getElementById('tourLaunch').addEventListener('click', startTour);
+  document.getElementById('startTourBtn').addEventListener('click', startTour);
+  document.getElementById('exploreBtn').addEventListener('click', function(){
+    document.getElementById('welcome').classList.add('hidden');
+  });
+
+  window.addEventListener('resize', function(){
+    if(overlay.classList.contains('active')){
+      var step = steps[current];
+      positionFor(step.target ? document.querySelector(step.target) : null);
+    }
+  });
+
+  // keyboard nav
+  document.addEventListener('keydown', function(e){
+    if(!overlay.classList.contains('active')) return;
+    if(e.key==='ArrowRight' || e.key==='Enter') document.getElementById('tourNext').click();
+    if(e.key==='ArrowLeft') document.getElementById('tourBack').click();
+    if(e.key==='Escape') endTour();
+  });
+})();
+</script>
+</body>
+</html>
