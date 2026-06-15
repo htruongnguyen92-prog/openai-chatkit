@@ -1,0 +1,28 @@
+<!--
+  KACHEL: Salesforce Einführung
+  Einfügen in den "MITARBEITER-PORTAL"-Grid auf novumstate-platform.php,
+  als weitere Karte neben "Knowledge Base" / "Knowledge Base Editor".
+  Verlinkt auf die Simulation: Salesforce-intro.php
+
+  Hinweis: Falls eure bestehenden Karten eigene CSS-Klassen nutzen, ersetze
+  einfach das <a class="ns-tile …"> durch eure Karten-Klasse – Icon, Titel,
+  Text und Badge bleiben gleich.
+-->
+<a href="Salesforce-intro.php" class="ns-tile" style="
+    display:flex; flex-direction:column; align-items:center; text-align:center;
+    background:#fff; border:2px solid #0070d2; border-radius:14px;
+    padding:26px 20px 20px; text-decoration:none; color:#16325c;
+    box-shadow:0 1px 4px rgba(0,0,0,.06); transition:box-shadow .15s, transform .15s;
+    min-height:230px; justify-content:center;"
+   onmouseover="this.style.boxShadow='0 6px 18px rgba(0,0,0,.12)';this.style.transform='translateY(-2px)'"
+   onmouseout="this.style.boxShadow='0 1px 4px rgba(0,0,0,.06)';this.style.transform='none'">
+  <div style="font-size:40px; line-height:1; margin-bottom:14px;">☁️</div>
+  <div style="font-weight:700; font-size:18px; line-height:1.25; margin-bottom:10px;">
+    Salesforce<br>Einführung
+  </div>
+  <div style="color:#54698d; font-size:14px; line-height:1.4; margin-bottom:16px;">
+    Interaktiver Rundgang durch die<br>Salesforce-Oberfläche (Demo)
+  </div>
+  <span style="background:#e8f1fc; color:#0070d2; font-weight:700; font-size:12px;
+               padding:5px 14px; border-radius:14px;">Alle</span>
+</a>

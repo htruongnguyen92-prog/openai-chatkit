@@ -1,7 +1,7 @@
 <?php
 /**
- * NovumState Platform – Interaktiver Rundgang über die Salesforce Case-Seite (Vorgang)
- * Eigenständige Seite für sf-dashboards/ · Einführungssession
+ * Salesforce-intro.php – Interaktiver Rundgang über die Salesforce Case-Seite (Vorgang)
+ * Eigenständige Seite für sf-dashboards/ · verlinkt aus der Kachel im Mitarbeiter-Portal
  *
  * Schritt-Inhalte werden serverseitig gepflegt und an das Frontend übergeben.
  * Beim Weiterklicken wird jeweils ein Element der Oberfläche hervorgehoben
